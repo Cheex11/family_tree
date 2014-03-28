@@ -84,23 +84,29 @@ end
 def view_relationships
   list
   puts "Please select the ID of the person you would like to view relationships for:"
-  person_id = gets.chomp
+  person_id = gets.chomp.to_i
 
   loop do
-    puts "Press '1' to view their mom and dad"
-    puts "Press '2' to view their siblings"
-    puts "Press '3' to view their grandparents"
-    puts "Press '4' to view their spouse"
-    puts "Press '5' to view their children."
+    puts "Press '1' to view their spouse"
+    puts "Press '2' to view their parents"
+    puts "Press '3' to view their children."
+    puts "Press '4' to view their siblings"
+    puts "Press '5' to view their grandparents"
+    puts "Press '6' to view their grandchildren"
+    puts "Press '7' to view their aunt and uncle"
+
     puts "Press 'm' to return to the main menu"
     user_choice = gets.chomp
 
     case user_choice
-      when '1' then view_parents(person_id)
-      when '2' then view_siblings(person_id)
-      when '3' then view_grandparents(person_id)
-      when '4' then view_spouse(person_id)
-      when '5' then view_children(person_id)
+      when '1' then view_spouse(person_id)
+      when '2' then view_parents(person_id)
+      when '3' then view_children(person_id)
+      when '4' then view_siblings(person_id)
+      when '5' then view_grandparents(person_id)
+      when '6' then view_grandchildren(person_id)
+      when '7' then view_auntanduncle(person_id)
+
       when 'm' then menu
       else puts "please enter a valid option"
     end
@@ -108,45 +114,84 @@ def view_relationships
 end
 
 def view_parents(person_id)
-  relationship = Relationship.find_by(person_id: person_id)
-
-  person = Person.find(relationship.person_id)
-  mother = Person.find(relationship.parent_one_id)
-  father = Person.find(relationship.parent_two_id)
-
-  puts "#{mother.name} is #{person.name}'s mother and #{father.name} is #{person.name}'s father.\n\n"
-end
-
-def view_children(person_id)
-
-  relationships = Relationship.where("parent_one_id = ? or parent_two_id = ?", person_id, person_id)
-  # DO NOT EVER EVER EVER EVER DO IT THIS WAY - QUOTES TALK DIRECTLY TO THE DATABASE AND ARE AT RISK FOR SECURITY BREACHES. MUST USE QUESTION MARKS
-  # relationships = Relationship.where("parent_one_id = #{person_id} or parent_two_id = #{person_id}")
-
-  relationships.each do |relationship|
-    puts Person.find(relationship.person_id).name
-  end
-end
-
-def view_siblings(person_id)
-  relationship = Relationship.find_by(person_id: person_id)
-
-  person = Person.find(relationship.person_id)
-  siblings = Relationship.find_siblings(person_id)
-
-  siblings.each { |sibling | puts "#{sibling} is #{person.name}'s sibling" }
-
+  # Relationship.find_parents(person_id).each { |parent| puts "#{Person.find(parent).name}" }
+  person = Person.find(person_id)
+  parents = Relationship.find_parents(person_id)
+  puts "#{Person.find(parents[0]).name} is #{person.name}'s mom and #{Person.find(parents[1]).name} is #{person.name}'s dad"
   puts "\n\n"
 end
 
-def view_grandparents(person_id)
-  relationship = Relationship.find_by(person_id: person_id)
+def view_children(person_id) #Add if statement later for people with no children.
+  person = Person.find(person_id)
+  Relationship.find_children(person_id).each do |child|
+    if Person.find(child).gender == 'male'
+      puts "#{Person.find(child).name} is #{person.name}'s son"
+    else
+      puts "#{Person.find(child).name} is #{person.name}'s daughter"
+    end
+  end
+  puts "\n\n"
+end
 
-  person = Person.find(relationship.person_id)
-  grandparents = Relationship.find_grandparents(person_id)
+def view_siblings(person_id)
+  person = Person.find(person_id)
+  Relationship.find_siblings(person_id).each do |sibling|
+    if Person.find(sibling).gender == 'male'
+      puts "#{Person.find(sibling).name} is #{person.name}'s brother"
+    else
+      puts "#{Person.find(sibling).name} is #{person.name}'s sister"
+    end
+  end
+  puts "\n\n"
+end
 
-  grandparents.each { |grandparent| puts "#{grandparent} is #{person.name}'s grandparent" }
+def view_grandparents(person_id)  #add paternal/maternal later
+  person = Person.find(person_id)
+  Relationship.find_parents(person_id).each do |parent|
+    Relationship.find_parents(parent).each do |grandparent|
+      if Person.find(grandparent).gender == 'male'
+        puts "#{Person.find(grandparent).name} is #{person.name}'s grandpa"
+      else
+        puts "#{Person.find(grandparent).name} is #{person.name}'s grandma"
+      end
+    end
+  end
+  puts "\n\n"
+end
 
+def view_grandchildren(person_id)
+  person = Person.find(person_id)
+  Relationship.find_children(person_id).each do |child|
+    Relationship.find_children(child).each do |grandchild|
+      if Person.find(grandchild).gender == 'male'
+        puts "#{Person.find(grandchild).name} is #{person.name}'s grandson"
+      else
+        puts "#{Person.find(grandchild).name} is #{person.name}'s granddaughter"
+      end
+    end
+  end
+  puts "\n\n"
+end
+
+def view_auntanduncle(person_id) # refactor, make DRY
+  person = Person.find(person_id)
+  Relationship.find_parents(person_id).each do |parent|
+    Relationship.find_siblings(parent).each do |sibling|
+      sibling_spouse = Relationship.find_by(person_id: sibling).spouse_id
+      if Person.find(sibling).gender == 'male'
+        puts "#{Person.find(sibling).name} is #{person.name}'s Uncle"
+      end
+      if Person.find(sibling_spouse).gender == 'male'
+        puts "#{Person.find(sibling_spouse).name} is #{person.name}'s Uncle"
+      end
+      if Person.find(sibling_spouse).gender == 'female'
+        puts "#{Person.find(sibling_spouse).name} is #{person.name}'s Aunt"
+      end
+      if Person.find(sibling).gender == 'female'
+        puts "#{Person.find(sibling).name} is #{person.name}'s Aunt"
+      end
+    end
+  end
   puts "\n\n"
 end
 

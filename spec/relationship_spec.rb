@@ -3,23 +3,26 @@ require 'spec_helper'
 describe Relationship do
   it { should belong_to :person }
 
-  describe '.find_grandparents' do
-    it "returns a person's grandparents when their ID is entered" do
-      test_grandchild = Person.create({:name => 'Patti', :gender => 'female'})
-      test_mom = Person.create({:name => 'Jenny', :gender => 'female'})
-      test_dad = Person.create({:name => 'Gary', :gender => 'male'})
-      test_grandma = Person.create({:name => 'Patsy', :gender => 'female'})
-      test_grandpa = Person.create({:name => 'Will', :gender => 'female'})
-      test_grandma_pat = Person.create({:name => 'Joan', :gender => 'female'})
-      test_grandpa_pat = Person.create({:name => 'Jim', :gender => 'female'})
+  # describe '.find_grandparents' do
+  #   it "returns a person's grandparents when their ID is entered" do
+  #     test_grandchild = Person.create({:name => 'Patti', :gender => 'female'})
+  #     test_mom = Person.create({:name => 'Jenny', :gender => 'female'})
+  #     test_dad = Person.create({:name => 'Gary', :gender => 'male'})
+  #     test_grandma = Person.create({:name => 'Patsy', :gender => 'female'})
+  #     test_grandpa = Person.create({:name => 'Will', :gender => 'female'})
+  #     test_grandma_pat = Person.create({:name => 'Joan', :gender => 'female'})
+  #     test_grandpa_pat = Person.create({:name => 'Jim', :gender => 'female'})
 
-      test_relationship1 = Relationship.create({ :person_id => test_grandchild.id, :parent_one_id => test_mom.id, :parent_two_id => test_dad.id})
-      test_relationship2 = Relationship.create({ :person_id => test_mom.id, :parent_one_id => test_grandma.id, :parent_two_id => test_grandpa.id})
-      test_relationship3 = Relationship.create({ :person_id => test_dad.id, :parent_one_id => test_grandma_pat.id, :parent_two_id => test_grandpa_pat.id})
+  #     test_relationship1 = Relationship.create({ :person_id => test_grandchild.id, :parent_one_id => test_mom.id, :parent_two_id => test_dad.id})
+  #     test_relationship2 = Relationship.create({ :person_id => test_mom.id, :parent_one_id => test_grandma.id, :parent_two_id => test_grandpa.id})
+  #     test_relationship3 = Relationship.create({ :person_id => test_dad.id, :parent_one_id => test_grandma_pat.id, :parent_two_id => test_grandpa_pat.id})
 
-      Relationship.find_grandparents(test_grandchild.id).should eq ['Patsy', 'Will', 'Joan', 'Jim']
-    end
-  end
+
+
+  #     Relationship.find_grandparents(test_grandchild.id).should eq ['Patsy', 'Will', 'Joan', 'Jim']
+  #     # Relationship.find_parents(test_grandchild.id).should eq ['Patsy', 'Will', 'Joan', 'Jim']
+  #   end
+  # end
 
   describe '.find_siblings' do
     it 'should return all siblings for a person' do
@@ -32,7 +35,28 @@ describe Relationship do
       brother_relationship = Relationship.create({ :person_id => test_brother.id, :parent_one_id => test_mom.id, :parent_two_id => test_dad.id})
       sister_relationship = Relationship.create({ :person_id => test_sister.id, :parent_one_id => test_mom.id, :parent_two_id => test_dad.id})
 
-      Relationship.find_siblings(test_person.id).should eq ['Owen', 'Jill']
+      Relationship.find_siblings(test_person.id).should eq [test_brother.id, test_sister.id]
+    end
+  end
+
+  describe '.find_parents' do
+    it 'should return a persons parents' do
+      test_person = Person.create({:name => 'Luke', :gender => 'male'})
+      test_mom = Person.create({:name => 'Laura', :gender => 'male'})
+      test_dad = Person.create({:name => 'Tracy', :gender => 'male'})
+      test_relationship = Relationship.create({ :person_id => test_person.id, :parent_one_id => test_mom.id, :parent_two_id => test_dad.id})
+      Relationship.find_parents(test_person.id).should eq [test_mom.id, test_dad.id]
+    end
+  end
+
+  describe '.find_children' do
+    it 'should return a persons children' do
+      test_son = Person.create({:name => 'Luke', :gender => 'male'})
+      test_mom = Person.create({:name => 'Laura', :gender => 'male'})
+      test_dad = Person.create({:name => 'Tracy', :gender => 'male'})
+      test_relationship = Relationship.create({ :person_id => test_son.id, :parent_one_id => test_mom.id, :parent_two_id => test_dad.id})
+      Relationship.find_children(test_mom.id).should eq [test_son.id]
+      Relationship.find_children(test_dad.id).should eq [test_son.id]
     end
   end
 
@@ -51,5 +75,6 @@ describe Relationship do
       eve.spouse.should be_nil
     end
   end
+
 
 end
