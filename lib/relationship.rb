@@ -23,8 +23,14 @@ class Relationship < ActiveRecord::Base
         results << Person.find(relationship.person_id).name
       end
     end
-
   results
+  end
 
+  def spouse
+    if spouse_id.nil?
+      nil
+    else
+      Relationship.find(spouse_id)
+    end
   end
 end

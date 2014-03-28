@@ -36,4 +36,20 @@ describe Relationship do
     end
   end
 
+  context '#spouse' do
+    it 'returns the person with their spouse_id' do
+      adam = Person.create({:name => 'Adam', :gender => 'male'})
+      steve = Person.create({:name => 'Steve', :gender => 'male'})
+      relationship = Relationship.create({:person_id => adam.id, :spouse_id => '' })
+      relationship.update(:spouse_id => steve.id)
+      adam.relationships[0].spouse_id.should eq steve.id
+    end
+
+    it "is nil if they aren't married" do
+      eve = Person.create(:name => 'Eve', :gender => 'female')
+      eve = Relationship.create(:person_id => eve.id)
+      eve.spouse.should be_nil
+    end
+  end
+
 end

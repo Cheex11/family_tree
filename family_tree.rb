@@ -68,12 +68,15 @@ def add_relationship
   puts "Please select the ID of #{person.name}'s father:"
   father = Person.find(gets.chomp.to_i)
   puts "Please enter the ID of #{person.name}'s spouse if they have one:"
-  spouse = Person.find(gets.chomp.to_i)
+  spouse = gets.chomp
+  if spouse != ''
+    spouse = Person.find(spouse.to_i).id
+  end
 
   Relationship.create({ :person_id => person.id,
                         :parent_one_id => mother.id,
                         :parent_two_id => father.id,
-                        :spouse_id => spouse.id})
+                        :spouse_id => spouse})
 
   puts "#{person.name}'s relationships have been created!\n\n"
 end
@@ -116,8 +119,9 @@ end
 
 def view_children(person_id)
 
-  # relationships = Relationship.where("parent_one_id = ? or parent_two_id = ?", person_id, person_id)
-  relationships = Relationship.where("parent_one_id = #{person_id} or parent_two_id = #{person_id}")
+  relationships = Relationship.where("parent_one_id = ? or parent_two_id = ?", person_id, person_id)
+  # DO NOT EVER EVER EVER EVER DO IT THIS WAY - QUOTES TALK DIRECTLY TO THE DATABASE AND ARE AT RISK FOR SECURITY BREACHES. MUST USE QUESTION MARKS
+  # relationships = Relationship.where("parent_one_id = #{person_id} or parent_two_id = #{person_id}")
 
   relationships.each do |relationship|
     puts Person.find(relationship.person_id).name
