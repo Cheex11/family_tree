@@ -94,7 +94,8 @@ def view_relationships
     puts "Press '5' to view their grandparents"
     puts "Press '6' to view their grandchildren"
     puts "Press '7' to view their aunt and uncle"
-
+    puts "Press '8' to view their cousins"
+    puts "Press '9' to view their in-laws"
     puts "Press 'm' to return to the main menu"
     user_choice = gets.chomp
 
@@ -106,7 +107,8 @@ def view_relationships
       when '5' then view_grandparents(person_id)
       when '6' then view_grandchildren(person_id)
       when '7' then view_auntanduncle(person_id)
-
+      when '8' then view_cousins(person_id)
+      when '9' then view_inlaws(person_id)
       when 'm' then menu
       else puts "please enter a valid option"
     end
@@ -195,6 +197,18 @@ def view_auntanduncle(person_id) # refactor, make DRY
   puts "\n\n"
 end
 
+def view_cousins(person_id)
+  person = Person.find(person_id)
+  Relationship.find_parents(person_id).each do |parent|
+    Relationship.find_siblings(parent).each do |sibling|
+      Relationship.find_children(sibling).each do |cousin|
+        puts "#{Person.find(cousin).name} is #{person.name}'s cousin."
+      end
+    end
+  end
+  puts "\n\n"
+end
+
 def view_spouse(person_id)
   relationship = Relationship.find_by(person_id: person_id)
 
@@ -202,6 +216,18 @@ def view_spouse(person_id)
   spouse = Person.find(relationship.spouse_id)
 
   puts "#{spouse.name} is #{person.name}'s spouse.\n\n"
+end
+
+def view_inlaws(person_id)
+  spouse_relationship = Relationship.find_by(person_id: person_id)
+  person = Person.find(spouse_relationship.person_id)
+  spouse = Person.find(spouse_relationship.spouse_id)
+
+  spouse_parents = Relationship.find_by(person_id: spouse.id)
+  spouse_mom = Person.find(spouse_parents.parent_one_id)
+  spouse_dad = Person.find(spouse_parents.parent_two_id)
+
+  puts "#{spouse_mom.name} is #{person.name}'s mother-in-law and #{spouse_dad.name} is #{person.name}'s father-in-law.\n\n"
 end
 
 def list
